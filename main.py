@@ -20,8 +20,6 @@ class Settings(BaseSettings):
 
 settings = Settings()
 
-print(f"BOT_TOKEN: {settings.BOT_TOKEN}")
-
 # Инициализация бота и OpenAI клиента
 bot = Bot(token=settings.BOT_TOKEN)
 dp = Dispatcher()
@@ -30,7 +28,6 @@ openai_client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
 @dp.message(CommandStart())
 async def start_command(message: types.Message):
     await message.answer("Привет! Отправь мне голосовое сообщение, и я преобразую его в текст, отвечу и озвучу ответ.")
-
 
 @dp.message(lambda message: message.voice)
 async def handle_voice_message(message: types.Message):
@@ -72,7 +69,6 @@ async def handle_voice_message(message: types.Message):
     await message.answer_voice(FSInputFile(audio_file_path))
     os.remove(audio_file_path)
 
-
 if __name__ == "__main__":
     import asyncio
 
@@ -80,4 +76,3 @@ if __name__ == "__main__":
         await dp.start_polling(bot)
 
     asyncio.run(main())
-
