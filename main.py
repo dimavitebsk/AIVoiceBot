@@ -14,7 +14,8 @@ logging.basicConfig(level=logging.INFO)
 class Settings(BaseSettings):
     BOT_TOKEN: str
     OPENAI_API_KEY: str
-
+    OPENAI_ASSISTANT_ID: str
+    
     class Config:
         env_file = ".env"
 
@@ -43,7 +44,7 @@ async def handle_voice_message(message: types.Message):
     # Отправляем аудио в Whisper API
     transcription = await openai_client.audio.transcriptions.create(
         model="whisper-1",
-        file=("voice.ogg", audio_data, "audio/ogg")
+        file=(f"voice_{message.chat.id}_{int(asyncio.get_event_loop().time())}.ogg", audio_data, "audio/ogg")
     )
     text = transcription.text
     await message.answer(f"Распознанный текст: {text}")
@@ -81,7 +82,7 @@ async def handle_voice_message(message: types.Message):
         voice="alloy",
         input=reply_text
     )
-    audio_file_path = "response.mp3"
+    audio_file_path = f"response_{message.chat.id}_{int(asyncio.get_event_loop().time())}.mp3"
     with open(audio_file_path, "wb") as audio_file:
         audio_file.write(tts_audio.content)
 
