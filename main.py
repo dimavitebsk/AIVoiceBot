@@ -48,12 +48,31 @@ async def handle_voice_message(message: types.Message):
     text = transcription.text
     await message.answer(f"Распознанный текст: {text}")
 
-    # Запрос в OpenAI Assistant API
-    assistant_response = await openai_client.chat.completions.create(
-        model="gpt-4-turbo",
-        messages=[{"role": "user", "content": text}]
+     # Запрос в OpenAI Assistant API
+    thread = await openai_client.beta.threads.create()
+    message_response = await openai_client.beta.threads.messages.create(
+        thread_id=thread.id,
+        role="user",
+        content=text
     )
-    reply_text = assistant_response.choices[0].message.content
+    run = await openai_client.beta.threads.runs.create(
+        thread_id=thread.id,
+        assistant_id=settings.OPENAI_ASSISTANT_ID
+    )
+    
+    while run.status not in ["completed", "failed"]:
+        run = await openai_client.beta.threads.runs.retrieve(
+            thread_id=thread.id,
+            run_id=run.id
+        )
+        await asyncio.sleep(0.5) 
+    
+    if run.status == "completed":
+        messages = await openai_client.beta.threads.messages.list(thread_id=thread.id)
+        reply_text = messages.data[0].content[0].text.value
+    else:
+        reply_text = "Произошла ошибка при получении ответа."
+    
     await message.answer(reply_text)
 
     # Озвучка ответа через TTS API
